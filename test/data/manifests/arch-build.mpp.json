@@ -3,6 +3,7 @@
   "pipelines": [
     {
       "name": "build",
+      "runner": "org.osbuild.arch",
       "stages": [
         {
           "type": "org.osbuild.pacman.conf"
@@ -19,15 +20,15 @@
                 "repos": [
                   {
                     "id": "core",
-                    "baseurl": "https://mirrors.celianvdb.fr/archlinux/$repo/os/$arch"
+                    "baseurl": "https://archive.archlinux.org/repos/2021/11/24/$repo/os/$arch"
                   },
                   {
                     "id": "community",
-                    "baseurl": "https://mirrors.celianvdb.fr/archlinux/$repo/os/$arch"
+                    "baseurl": "https://archive.archlinux.org/repos/2021/11/24/$repo/os/$arch"
                   },
                   {
                     "id": "extra",
-                    "baseurl": "https://mirrors.celianvdb.fr/archlinux/$repo/os/$arch"
+                    "baseurl": "https://archive.archlinux.org/repos/2021/11/24/$repo/os/$arch"
                   }
                 ],
                 "packages": [
@@ -39,12 +40,95 @@
                   "systemd",
                   "tar",
                   "xfsprogs",
-                  "xz"
+                  "xz",
+                  "python"
                 ]
               }
             }
           },
           "options": {}
+        }
+      ]
+    },
+    {
+      "name": "os",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.pacman.conf"
+        },
+        {
+          "type": "org.osbuild.pacman",
+          "inputs": {
+            "packages": {
+              "type": "org.osbuild.files",
+              "origin": "org.osbuild.source",
+              "mpp-depsolve": {
+                "architecture": "x86_64",
+                "module-platform-id": "f34",
+                "repos": [
+                  {
+                    "id": "core",
+                    "baseurl": "https://archive.archlinux.org/repos/2021/11/24/$repo/os/$arch"
+                  },
+                  {
+                    "id": "community",
+                    "baseurl": "https://archive.archlinux.org/repos/2021/11/24/$repo/os/$arch"
+                  },
+                  {
+                    "id": "extra",
+                    "baseurl": "https://archive.archlinux.org/repos/2021/11/24/$repo/os/$arch"
+                  }
+                ],
+                "packages": [
+                  "base",
+                  "bash",
+                  "pacman",
+                  "btrfs-progs",
+                  "dosfstools",
+                  "e2fsprogs",
+                  "systemd",
+                  "linux",
+                  "tar",
+                  "grub",
+                  "openssh"
+                ]
+              }
+            }
+          },
+          "options": {}
+        },
+        {
+          "type": "org.osbuild.users",
+          "options": {
+            "users": {
+            "arch": {
+              "password": "$6$.Pkz378k0geWPWsH$IhFEP1WmQUEkmfMLbf14C./LUYJqsKBVXsNZ2mrOAcKY4wjMN8e/r8TwQmqpm/xPIpfPq1l0PpKD7YQyVHvuD/",
+              "home": "/home/arch"
+            }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "root-tar",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.tar",
+          "options": {
+            "filename": "arch.tar.zst"
+          },
+          "inputs": {
+            "tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:os"
+              ]
+            }
+          }
         }
       ]
     }

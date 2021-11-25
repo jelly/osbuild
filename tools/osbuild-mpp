@@ -272,7 +272,7 @@ import urllib.parse
 from typing import Dict, Optional
 
 import rpm
-import dnf
+#import dnf
 
 from osbuild.util.rhsm import Subscriptions
 
