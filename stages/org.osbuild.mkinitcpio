@@ -1,0 +1,35 @@
+#!/usr/bin/python3
+"""
+Run mkinitcpio for Arch based distributions
+
+WARNING: This stage uses chroot() to run the `mkinitcpio` binary
+from inside the tree.
+"""
+
+import subprocess
+import sys
+import os
+
+import osbuild.api
+
+SCHEMA = """
+"additionalProperties": false,
+"properties": {
+}
+"""
+
+
+def main(tree, options):
+    # TODO: HAX
+    subprocess.run(["mount", "-o", "bind", "/proc", f"{tree}/proc"], check=True)
+    subprocess.run(["mount", "-o", "bind", "/dev", f"{tree}/dev"], check=True)
+    # TODO: moar hax
+    subprocess.run(["ln", "-s", "/proc/self/fd", "/dev/fd"], check=True)
+    subprocess.run(["ln", "-s", "/proc/self/fd/0", "/dev/stdin"], check=True)
+    subprocess.run(["chroot", tree, "mkinitcpio", "-p", "linux"], check=True)
+
+
+if __name__ == '__main__':
+    args = osbuild.api.arguments()
+    r = main(args["tree"], args["options"])
+    sys.exit(r)
