@@ -151,7 +151,7 @@
                 "sha256:87c3560bcb2246ef4316211f944a20016ef8db83749951e31456dd1bba857f8f": {},
                 "sha256:bf78700d2bfb743c72b4a6478b6743a11cec1136eb4e7acac12cbad47dabf3f6": {},
                 "sha256:f4a3728f9f968d43d81c50d4e667e4fe43313351aa674e9187debdc0c29bf83d": {},
-                "sha256:f45a754682f8e929c38e83308c8038da55b8c1714077d8991b34cedafca4f131": {},
+                "sha256:aadf6ad0a5beb7296f2ceef46b150ffab10fa5037c8390502a37fd2ee9fe4d5c": {},
                 "sha256:613e6d9847f4575e2169bdcd5c2460dc7f618a59a4bb68c0d64ac960d4645a43": {},
                 "sha256:549b1c4b555a97d05c1d7494c78fa54c4108a13dd504bc60db0336331d2bb612": {},
                 "sha256:006eb979188bf1fba178b2817f394c2e0aec3c2e6c64555fd62f11f30623225d": {},
@@ -246,7 +246,16 @@
                 "sha256:a16609b1d57febe7a7904bb5d5fda9b57c51d7cdf65345344b5ecbaf12633355": {},
                 "sha256:0c6ca168436265b8e7e9b42f3455f80cffe4b8c1a06895e4267920430d59417d": {},
                 "sha256:6dde69d1fec57e16833e9a1135d04747b15f5ab23e04aaa47aca856225b69daf": {},
-                "sha256:510ca3ac4f2828a7c4046a3ff3f0343ada7b4aec4c42f97a551448c988253ca5": {}
+                "sha256:510ca3ac4f2828a7c4046a3ff3f0343ada7b4aec4c42f97a551448c988253ca5": {},
+                "sha256:f90038935d6ada0cb8f998fc4163fd11432d163db6dbb4749a90f3ec937ad543": {},
+                "sha256:cbb46471b64bd747d4433697d059a0fc093886b9b6585a20e1453b27722a52ae": {},
+                "sha256:f085ba2dbbd1b9540735643937dfddc286cc52bffcb06058a3bd5fc1a2fc435e": {},
+                "sha256:a78c70a769ee27192c8bbc181a0de0e68bc210312e414bc010e65a3d04f93c61": {},
+                "sha256:83225cf0cc706cb6078a3cf6673ac234d0ac4f5712339a30276cb74c1d49e0e4": {},
+                "sha256:9bd2a88104c6fd8ce62c669076746dca38b05e8d33f545cb38e7f6658d1ae3df": {},
+                "sha256:53b6bbe7a539cf395a3cba1e8d589b0acd160a45ed8024e5aa0414301947b18f": {},
+                "sha256:eca12ceaef774299ed7022de9b00dd7ce379186da4c223cf357fc157a9064da6": {},
+                "sha256:7fe0a44158460b1cdb1fb1abd28163116903d6900f6ab68ef48413de807a24c6": {}
               }
             }
           },
@@ -404,6 +413,38 @@
               }
             }
           }
+        },
+        {
+          "type": "org.osbuild.fstab",
+          "options": {
+            "filesystems": [
+              {
+                "uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+                "vfs_type": "xfs",
+                "path": "/",
+                "options": "defaults"
+              },
+              {
+                "uuid": "7B77-95E7",
+                "vfs_type": "vfat",
+                "path": "/boot/efi",
+                "options": "defaults,uid=0,gid=0,umask=077,shortname=winnt",
+                "passno": 2
+              }
+            ]
+          }
+        },
+        {
+          "type": "org.osbuild.grub2",
+          "options": {
+            "root_fs_uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+            "kernel_opts": "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0 crashkernel=auto",
+            "legacy": "i386-pc",
+            "saved_entry": "ffffffffffffffffffffffffffffffff-4.18.0-331.el8.x86_64"
+          }
+        },
+        {
+          "type": "org.osbuild.mkinitcpio"
         }
       ]
     },
@@ -423,6 +464,159 @@
               "references": [
                 "name:os"
               ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "image",
+      "build": "name:build",
+      "stages": [
+        {
+          "type": "org.osbuild.truncate",
+          "options": {
+            "filename": "disk.img",
+            "size": "10737418240"
+          }
+        },
+        {
+          "type": "org.osbuild.sfdisk",
+          "options": {
+            "label": "gpt",
+            "uuid": "D209C89E-EA5E-4FBD-B161-B461CCE297E0",
+            "partitions": [
+              {
+                "bootable": true,
+                "size": 2048,
+                "start": 2048,
+                "type": "21686148-6449-6E6F-744E-656564454649",
+                "uuid": "FAC7F1FB-3E8D-4137-A512-961DE09A5549"
+              },
+              {
+                "size": 204800,
+                "start": 4096,
+                "type": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
+                "uuid": "68B2905B-DF3E-4FB3-80FA-49D1E773AA33"
+              },
+              {
+                "size": 20762524,
+                "start": 208896,
+                "type": "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
+                "uuid": "6264D520-3FB9-423F-8AB8-7A0A8E3D3562"
+              }
+            ]
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "disk.img"
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.fat",
+          "options": {
+            "volid": "7B7795E7"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "disk.img",
+                "start": 4096,
+                "size": 204800
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.mkfs.xfs",
+          "options": {
+            "uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
+            "label": "root"
+          },
+          "devices": {
+            "device": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "disk.img",
+                "start": 208896,
+                "size": 20762524
+              }
+            }
+          }
+        },
+        {
+          "type": "org.osbuild.copy",
+          "inputs": {
+            "root-tree": {
+              "type": "org.osbuild.tree",
+              "origin": "org.osbuild.pipeline",
+              "references": [
+                "name:os"
+              ]
+            }
+          },
+          "options": {
+            "paths": [
+              {
+                "from": "input://root-tree/",
+                "to": "mount://root/"
+              }
+            ]
+          },
+          "devices": {
+            "efi": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "disk.img",
+                "start": 4096,
+                "size": 204800
+              }
+            },
+            "root": {
+              "type": "org.osbuild.loopback",
+              "options": {
+                "filename": "disk.img",
+                "start": 208896,
+                "size": 20762524
+              }
+            }
+          },
+          "mounts": [
+            {
+              "name": "root",
+              "type": "org.osbuild.xfs",
+              "source": "root",
+              "target": "/"
+            },
+            {
+              "name": "efi",
+              "type": "org.osbuild.fat",
+              "source": "efi",
+              "target": "/boot/efi"
+            }
+          ]
+        },
+        {
+          "type": "org.osbuild.grub2.inst",
+          "options": {
+            "filename": "disk.img",
+            "platform": "i386-pc",
+            "location": 2048,
+            "core": {
+              "type": "mkimage",
+              "partlabel": "gpt",
+              "filesystem": "xfs"
+            },
+            "prefix": {
+              "type": "partition",
+              "partlabel": "gpt",
+              "number": 2,
+              "path": "/boot/grub2"
             }
           }
         }
@@ -681,7 +875,7 @@
         "sha256:c09c854604da2b2b7fea13137336b41fe2354b3ace7ca503f439fe6bd9bc9b0d": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/virglrenderer-0.9.1-1-x86_64.pkg.tar.zst",
         "sha256:767df3a10e752a56bbe7b67e5d82aa7c70dfa2839ecdc61da3b7d70062c4256b": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/vte-common-0.66.1-2-x86_64.pkg.tar.zst",
         "sha256:021acfcf01588f69c0ecb9e44f39047f33cdb2bbdb83797fb30ed06d5720a7f5": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/vte3-0.66.1-2-x86_64.pkg.tar.zst",
-        "sha256:f45a754682f8e929c38e83308c8038da55b8c1714077d8991b34cedafca4f131": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/vulkan-icd-loader-1.2.194-1-x86_64.pkg.tar.zst",
+        "sha256:aadf6ad0a5beb7296f2ceef46b150ffab10fa5037c8390502a37fd2ee9fe4d5c": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/vulkan-icd-loader-1.2.199-1-x86_64.pkg.tar.zst",
         "sha256:1648c6b14e9302596e1ea030be56bd5113758ae7b912fac2916f31d5df2288c0": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/wayland-1.19.0-2-x86_64.pkg.tar.zst",
         "sha256:7c7a5cc9f6321276414f68f6135a5ea38ee858a5e37cbfc0b196e4eca7622d3e": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/xcb-proto-1.14.1-3-any.pkg.tar.zst",
         "sha256:ba6b6ca9288b06873794141d398e0fb99c6c80159395562603e34cab6946fb45": "https://archive.archlinux.org/repos/2021/11/24/extra/os/x86_64/xkeyboard-config-2.34-1-any.pkg.tar.zst",

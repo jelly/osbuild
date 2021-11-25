@@ -238,6 +238,7 @@ def main(tree, inputs, options):
         mount -o bind /sys {tree}/sys
         mount -o bind /proc {tree}/proc
     """
+    subprocess.run(["ln", "-s", "/proc/self/fd/0", "/dev/stdin"], check=True)
 
     machine_id_set_previously = os.path.exists(f"{tree}/etc/machine-id")
     if not machine_id_set_previously:
