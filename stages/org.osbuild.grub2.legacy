@@ -236,8 +236,8 @@ menuentry '${title}' --class red --class gnu-linux --class gnu --class os --unre
 	insmod all_video
 	set gfxpayload=keep
 	search --no-floppy --set=root ${search}
-	linux${loader} /vmlinuz-${kernel} ${cmdline}
-	initrd${loader} /initramfs-${kernel}.img
+	linux${loader} /boot/vmlinuz-${kernel} ${cmdline}
+	initrd${loader} /boot/initramfs-${kernel}.img
 }
 """
 

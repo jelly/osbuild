@@ -437,15 +437,38 @@
           }
         },
         {
-          "type": "org.osbuild.bls"
-        },
-        {
-          "type": "org.osbuild.grub2",
+          "type": "org.osbuild.grub2.legacy",
           "options": {
-            "root_fs_uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8",
-            "kernel_opts": "console=tty0 console=ttyS0,115200n8 no_timer_check net.ifnames=0 crashkernel=auto",
-            "legacy": "i386-pc",
-            "saved_entry": "ffffffffffffffffffffffffffffffff-4.18.0-331.el8.x86_64"
+            "architecture": "x64",
+            "rootfs": {
+              "uuid": "0194fdc2-fa2f-4cc0-81d3-ff12045b73c8"
+            },
+            "bios": "i386-pc",
+            "entries": [
+              {
+                "id": "76a22bf4-f153-4541-b6c7-0332c0dfaeac",
+                "default": true,
+                "product": {
+                  "name": "Arch Linux",
+                  "version": "latest",
+                  "nick": "Arch"
+                },
+                "kernel": "linux"
+              }
+            ],
+            "config": {
+              "cmdline": "ro crashkernel=auto console=tty1 console=ttyS0 earlyprintk=ttyS0 rootdelay=300 scsi_mod.use_blk_mq=y enforcing=0",
+              "distributor": "$(sed 's, release .*$,,g' /etc/system-release)",
+              "serial": "serial --speed=115200 --unit=0 --word=8 --parity=no --stop=1",
+              "terminal_input": [
+                "serial",
+                "console"
+              ],
+              "terminal_output": [
+                "serial",
+                "console"
+              ]
+            }
           }
         },
         {
