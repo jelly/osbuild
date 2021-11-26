@@ -43,6 +43,7 @@
                   "xz",
                   "python",
                   "grub",
+                  "efibootmgr",
                   "mkinitcpio"
                 ]
               }
@@ -130,6 +131,9 @@
               }
             ]
           }
+        },
+        {
+          "type": "org.osbuild.bls"
         },
         {
           "type": "org.osbuild.grub2",
