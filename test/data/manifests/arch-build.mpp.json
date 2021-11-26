@@ -334,7 +334,8 @@
               "core": {
                 "type": "mkimage",
                 "partlabel": "gpt",
-                "filesystem": "xfs"
+                "filesystem": "xfs",
+                "binary": "grub-mkimage"
               },
               "prefix": {
                 "type": "partition",
