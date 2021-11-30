@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 """
-Verify, and install RPM packages
-
-The `exclude.docs` option can be used to tell rpm to not install docs.
+Verify, and install Pacman packages
 
 `gpgkeys` should be an array of strings containing each GPG key to be used
 to verify the packages.
@@ -36,6 +34,7 @@ import os
 import pathlib
 import subprocess
 import sys
+import shutil
 import tempfile
 from operator import itemgetter
 
@@ -45,10 +44,6 @@ from osbuild import api
 SCHEMA = """
 "additionalProperties": false,
 "properties": {
-  "disable_dracut": {
-    "description": "Prevent dracut from running",
-    "type": "boolean"
-  },
   "exclude": {
     "type": "object",
     "additionalProperties": false,
@@ -106,10 +101,6 @@ SCHEMA_2 = """
       "description": "Array of GPG key contents to import",
       "type": "array",
       "items": { "type": "string" }
-    },
-    "disable_dracut": {
-      "description": "Prevent dracut from running",
-      "type": "boolean"
     },
     "exclude": {
       "type": "object",
@@ -171,44 +162,6 @@ def generate_package_metadata(tree):
     return data
 
 
-def disable_dracut(tree):
-    kernel_install_d = f"{tree}/etc/kernel/install.d"
-    files = []
-
-    os.makedirs(kernel_install_d, exist_ok=True)
-
-    for path in ["50-dracut.install", "51-dracut-rescue.install"]:
-        target = os.path.join(kernel_install_d, path)
-        os.symlink("/dev/null", target)
-        files.append(target)
-
-    return files
-
-
-def enable_dracut(masked_files):
-    for path in masked_files:
-        os.unlink(path)
-
-
-def remove_unowned_etc_kernel(tree):
-    # if installed, /etc/kernel is owned by systemd-udev; but
-    # in case the directory is un-owned, remove it again
-    res = subprocess.run(["rpm",
-                          "--root", tree,
-                          "-qf", "/etc/kernel"],
-                         stdout=subprocess.PIPE,
-                         check=False)
-    owner = res.stdout.strip()
-
-    if res == 0 and owner:
-        print(f"/etc/kernel is owned by {owner}")
-        return
-
-    with contextlib.suppress(OSError):
-        os.rmdir("etc/kernel/install.d")
-        os.rmdir("etc/kernel")
-
-
 def parse_input(inputs):
     packages = inputs["packages"]
     path = packages["path"]
@@ -254,7 +207,6 @@ def main(tree, inputs, options):
 
     os.makedirs(os.path.join(tree, "var/lib/pacman"), exist_ok=True)
 
-    import shutil
     with tempfile.TemporaryDirectory(dir=tree) as tmpdir:
         install_pkgs = []
         for p in packages:
