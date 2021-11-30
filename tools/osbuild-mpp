@@ -269,10 +269,10 @@ import subprocess
 import sys
 import tempfile
 import urllib.parse
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import rpm
-#import dnf
+# import dnf
 
 from osbuild.util.rhsm import Subscriptions
 
@@ -548,6 +548,20 @@ class DepSolver:
         return deps
 
 
+class DepSolverFactory():
+
+    def __init__(self, cachedir, persistdir):
+        self._cachedir = cachedir or "/tmp/pacsolve"
+        self._persistdir = persistdir
+
+    def get_depsolver(self, mpp):
+        solver = mpp.get('solver', 'fedora')
+        if solver == "arch":
+            return PacmanSolver(self._cachedir, self._persistdir)
+        else:
+            return DepSolver(self._cachedir, self._persistdir)
+
+
 class Partition:
     def __init__(self,
                  uid: str = None,
@@ -814,7 +828,7 @@ class ManifestFile:
         with f:
             return ManifestFile.load_from_fd(f, fullpath, self.overrides, self.vars, self.searchdirs)
 
-    def depsolve(self, solver: DepSolver, desc: Dict):
+    def depsolve(self, solver: Union[DepSolver, PacmanSolver], desc: Dict):
         repos = desc.get("repos", [])
         packages = desc.get("packages", [])
         excludes = desc.get("excludes", [])
@@ -1036,7 +1050,7 @@ class ManifestFileV1(ManifestFile):
             self._process_import(current)
             current = current.get("pipeline", {}).get("build")
 
-    def _process_depsolve(self, solver, stage, pipeline_name):
+    def _process_depsolve(self, stage, pipeline_name, cache):
         if stage.get("name", "") not in ("org.osbuild.pacman", "org.osbuild.rpm"):
             return
         options = stage.get("options")
@@ -1047,6 +1061,9 @@ class ManifestFileV1(ManifestFile):
         if not mpp:
             return
 
+        persistdir = tempfile.TemporaryDirectory()
+        solver = DepSolverFactory(cache, persistdir).get_depsolver(mpp)
+
         self._process_format(mpp)
 
         packages = element_enter(options, "packages", [])
@@ -1056,7 +1073,7 @@ class ManifestFileV1(ManifestFile):
 
         packages += checksums
 
-    def process_depsolves(self, solver, pipeline=None, depth=0):
+    def process_depsolves(self, pipeline=None, depth=0, cache=None):
         if pipeline is None:
             pipeline = self.pipeline
 
@@ -1069,11 +1086,11 @@ class ManifestFileV1(ManifestFile):
 
         stages = element_enter(pipeline, "stages", [])
         for stage in stages:
-            self._process_depsolve(solver, stage, pipeline_name)
+            self._process_depsolve(stage, pipeline_name, cache)
         build = pipeline.get("build")
         if build:
             if "pipeline" in build:
-                self.process_depsolves(solver, build["pipeline"], depth+1)
+                self.process_depsolves(build["pipeline"], depth+1)
 
     def process_embed_files(self):
         "Embedding files is not supported for v1 manifests"
@@ -1101,7 +1118,7 @@ class ManifestFileV2(ManifestFile):
         else:
             mpp = self.get_mpp_node(pipeline, "import-pipeline")
             if not mpp:
-                return [pipeline] # Not an import
+                return [pipeline]  # Not an import
             ids = [mpp["id"]]
 
         path = mpp["path"]
@@ -1137,7 +1154,7 @@ class ManifestFileV2(ManifestFile):
         for pipeline in old_pipelines:
             self.pipelines.extend(self._process_import(pipeline))
 
-    def _process_depsolve(self, solver, stage, pipeline_name):
+    def _process_depsolve(self, stage, pipeline_name, cache=None):
         if stage.get("type", "") not in ("org.osbuild.pacman", "org.osbuild.rpm"):
             return
         inputs = element_enter(stage, "inputs", {})
@@ -1146,6 +1163,9 @@ class ManifestFileV2(ManifestFile):
         mpp = self.get_mpp_node(packages, "depsolve")
         if not mpp:
             return
+
+        persistdir = tempfile.TemporaryDirectory()
+        solver = DepSolverFactory(cache, persistdir).get_depsolver(mpp)
 
         self._process_format(mpp)
 
@@ -1157,12 +1177,12 @@ class ManifestFileV2(ManifestFile):
         for checksum in checksums:
             refs[checksum] = {}
 
-    def process_depsolves(self, solver):
+    def process_depsolves(self, cache=None):
         for pipeline in self.pipelines:
             name = pipeline.get("name", "")
             stages = element_enter(pipeline, "stages", [])
             for stage in stages:
-                self._process_depsolve(solver, stage, name)
+                self._process_depsolve(stage, name, cache)
 
     def process_embed_files(self):
 
@@ -1279,9 +1299,9 @@ def main():
 
     m.process_embed_files()
 
-    with tempfile.TemporaryDirectory() as persistdir:
-        solver = PacmanSolver(args.dnf_cache, persistdir)
-        m.process_depsolves(solver)
+    # with tempfile.TemporaryDirectory() as persistdir:
+    # solver = PacmanSolver(args.dnf_cache, persistdir)
+    m.process_depsolves(cache=args.dnf_cache)
 
     m.process_format()
 

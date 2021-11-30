@@ -16,6 +16,7 @@
               "origin": "org.osbuild.source",
               "mpp-depsolve": {
                 "architecture": "x86_64",
+                "solver": "arch",
                 "module-platform-id": "f34",
                 "repos": [
                   {
@@ -68,6 +69,7 @@
               "origin": "org.osbuild.source",
               "mpp-depsolve": {
                 "architecture": "x86_64",
+                "solver": "arch",
                 "module-platform-id": "f34",
                 "repos": [
                   {
@@ -196,6 +198,7 @@
     {
       "name": "image",
       "build": "name:build",
+      "solver": "arch",
       "stages": [
           {
             "type": "org.osbuild.truncate",
